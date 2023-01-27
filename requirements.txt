@@ -1,2 +1,2 @@
-pocketsphinx
+pocketsphinx==
 streamlit
