@@ -5,7 +5,7 @@ from datetime import datetime
 st.set_page_config(page_title="Audio Transcription", page_icon=":microphone:", layout="wide")
 
 def transcribe_audio():
-    st.set_header("Transcribing Audio")
+    st.title("Transcribing Audio")
     audio_file = st.file_uploader("Upload an audio file in WAV format", type=["wav"])
     if audio_file is None:
         st.warning("Please upload an audio file")
