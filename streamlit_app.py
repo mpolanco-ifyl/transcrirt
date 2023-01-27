@@ -1,36 +1,32 @@
+import streamlit as st
 import speech_recognition as sr
-import os
-import shutil
+from datetime import datetime
 
-def transcribe_audio(language):
-    # Inicializar el reconocedor de voz
-    recognizer = sr.Recognizer()
+st.set_page_config(page_title="Audio Transcription", page_icon=":microphone:", layout="wide")
 
-    # Abrir el archivo de audio
-    with sr.AudioFile('audio.wav') as source:
-        audio = recognizer.record(source)
+def transcribe_audio():
+    st.set_header("Transcribing Audio")
+    audio_file = st.file_uploader("Upload an audio file in WAV format", type=["wav"])
+    if audio_file is None:
+        st.warning("Please upload an audio file")
+    else:
+        st.success("Audio file uploaded")
+        r = sr.Recognizer()
+        with sr.AudioFile(audio_file) as source:
+            audio_text = r.listen(source)
+            try:
+                text = r.recognize_google(audio_text, language='en-US')
+                st.success("Transcription complete!")
+                st.text(text)
+                # create a download button
+                download_button = st.button("Download Transcription")
+                if download_button:
+                    # use st.download() to export the file to the user's downloads folder
+                    st.download(text, "Transcription_"+str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))+".txt")
+                    st.success("Transcription downloaded!")
+            except:
+                st.error("Sorry, something went wrong. Please try again.")
 
-    # Transcribir el audio
-    if language == "es":
-        text = recognizer.recognize_google(audio, language='es-ES')
-        filename = "transcription_es.txt"
-    elif language == "en":
-        text = recognizer.recognize_google(audio, language='en-US')
-        filename = "transcription_en.txt"
-
-    # Escribir el texto en el archivo
-    with open(filename, "w") as file:
-        file.write(text)
-        
-    # Mover el archivo a la carpeta de descargas del usuario
-    home = os.path.expanduser("~")
-    download_folder = os.path.join(home, "Downloads")
-    shutil.move(filename, download_folder)
-        
-    return text
-
-# Ejemplo de uso
-text_es = transcribe_audio("es")
-print(text_es)
-text_en = transcribe_audio("en")
-print(text_en)
+if __name__ == '__main__':
+    st.title("Audio Transcription App")
+    transcribe_audio()
