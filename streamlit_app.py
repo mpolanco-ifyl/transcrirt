@@ -1,8 +1,6 @@
 import streamlit as st
-import speech_recognition as sr
-from datetime import datetime
-
-st.set_page_config(page_title="Audio Transcription", page_icon=":microphone:", layout="wide")
+import os
+from pocketsphinx import LiveSpeech
 
 def transcribe_audio():
     st.title("Transcribing Audio")
@@ -11,21 +9,36 @@ def transcribe_audio():
         st.warning("Please upload an audio file")
     else:
         st.success("Audio file uploaded")
-        r = sr.Recognizer()
-        with sr.AudioFile(audio_file) as source:
-            audio_text = r.listen(source)
-            try:
-                text = r.recognize_google(audio_text, language='en-US')
-                st.success("Transcription complete!")
-                st.text(text)
-                # create a download button
-                download_button = st.button("Download Transcription")
-                if download_button:
-                    # use st.download() to export the file to the user's downloads folder
-                    st.download(text, "Transcription_"+str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))+".txt")
-                    st.success("Transcription downloaded!")
-            except:
-                st.error("Sorry, something went wrong. Please try again.")
+        # set the language model to use
+        language_model = st.selectbox("Select Language Model", ["en-US", "es-ES"])
+        speech = LiveSpeech(
+            verbose=False,
+            sampling_rate=16000,
+            buffer_size=2048,
+            no_search=False,
+            full_utt=False,
+            hmm=os.path.join(
+                "pocketsphinx-data", "model", language_model, "hmm"
+            ),
+            lm=os.path.join(
+                "pocketsphinx-data", "model", language_model, "lm.bin"
+            ),
+            dic=os.path.join(
+                "pocketsphinx-data", "model", language_model, "dict"
+            ),
+        )
+        # transcribe the audio
+        text = ""
+        for phrase in speech:
+            text += phrase
+        st.success("Transcription complete!")
+        st.text(text)
+        # create a download button
+        download_button = st.button("Download Transcription")
+        if download_button:
+            # use st.download() to export the file to the user's downloads folder
+            st.download(text, "Transcription_"+str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))+".txt")
+            st.success("Transcription downloaded!")
 
 if __name__ == '__main__':
     st.title("Audio Transcription App")
